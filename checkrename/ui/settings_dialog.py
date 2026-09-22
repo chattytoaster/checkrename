@@ -158,6 +158,20 @@ class SettingsDialog(QDialog):
         l_ocr.addLayout(h_tess)
 
         layout_int.addWidget(grp_ocr)
+
+        # История и данные
+        grp_data = QGroupBox("История и данные")
+        l_data = QVBoxLayout(grp_data)
+        lbl_data_desc = QLabel("CheckRename запоминает обработанные файлы, чтобы не переименовывать их повторно.")
+        lbl_data_desc.setStyleSheet("color: #64748B; font-size: 11px;")
+        l_data.addWidget(lbl_data_desc)
+
+        btn_clear_data = QPushButton("Очистить историю обработанных файлов")
+        btn_clear_data.setStyleSheet("padding: 5px 12px;")
+        btn_clear_data.clicked.connect(self._clear_processed_data)
+        l_data.addWidget(btn_clear_data)
+
+        layout_int.addWidget(grp_data)
         layout_int.addStretch()
         tabs.addTab(tab_integration, "Система и OCR")
 
@@ -251,6 +265,23 @@ class SettingsDialog(QDialog):
         sample = sample.replace("{org}", "ООО Ромашка")
         sample = sample.replace("{original}", "download_invoice")
         self.lbl_preview.setText(f"Превью: {sample}.pdf")
+
+    def _clear_processed_data(self):
+        reply = QMessageBox.question(
+            self,
+            "Очистка данных",
+            "Очистить историю обработанных файлов?\n\nПосле очистки программа снова сможет переименовывать файлы, которые ранее уже были переименованы.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            from checkrename.tracker import default_tracker, remove_ads_marker
+            default_tracker.clear()
+            watch_dir = Path(self.config.watch_folder)
+            if watch_dir.is_dir():
+                for f in watch_dir.glob("*.pdf"):
+                    remove_ads_marker(f)
+            QMessageBox.information(self, "Успешно", "История обработанных файлов успешно очищена.")
 
     def _save_and_close(self):
         self.config.watch_enabled = self.chk_watch_enabled.isChecked()
