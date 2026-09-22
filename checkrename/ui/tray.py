@@ -98,9 +98,23 @@ class TrayManager(QObject):
         if self.settings_dialog is None:
             self.settings_dialog = SettingsDialog(self.config)
             self.settings_dialog.settings_saved.connect(self._on_settings_saved)
-        self.settings_dialog.show()
+
+        if self.settings_dialog.isMinimized():
+            self.settings_dialog.showNormal()
+        else:
+            self.settings_dialog.show()
+
         self.settings_dialog.raise_()
         self.settings_dialog.activateWindow()
+
+        import sys
+        if sys.platform == "win32":
+            try:
+                import ctypes
+                hwnd = int(self.settings_dialog.winId())
+                ctypes.windll.user32.SetForegroundWindow(hwnd)
+            except Exception:
+                pass
 
     def _on_settings_saved(self, new_config: AppConfig):
         self.config = new_config

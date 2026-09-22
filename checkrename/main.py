@@ -16,6 +16,7 @@ from checkrename.parser import parse_invoice_pdf
 from checkrename.renamer import Renamer
 from checkrename.ui.tray import TrayManager
 from checkrename.ui.resources import create_app_icon
+from checkrename.single_instance import SingleInstance
 from checkrename.context_menu import (
     register_context_menu, unregister_context_menu, is_context_menu_registered,
     set_autostart, is_autostart_registered
@@ -30,17 +31,11 @@ def set_windows_app_id():
     except Exception:
         pass
 
-def handle_single_file_cli(file_path_str: str):
+def handle_single_file_cli(app: QApplication, file_path_str: str):
     """
-    Обработка файла при вызове из контекстного меню Проводника (ПКМ «Найти номер счета»).
+    Обработка файла при вызове из контекстного меню Проводника (ПКМ «Найти номер счета»),
+    когда фоновый процесс CheckRename еще не был запущен.
     """
-    set_windows_app_id()
-    app = QApplication(sys.argv)
-    app.setApplicationName("CheckRename")
-    app.setApplicationDisplayName("CheckRename")
-    app.setOrganizationName("CheckRename")
-    app.setQuitOnLastWindowClosed(False)
-
     config = AppConfig.load()
     renamer = Renamer(config)
     path = Path(file_path_str).resolve()
@@ -130,18 +125,42 @@ def main():
             print("Ошибка при удалении пункта контекстного меню.")
         return
 
-    # Запуск обработки одиночного файла (ПКМ)
-    if args.file:
-        handle_single_file_cli(args.file)
-        return
-
-    # Стандартный запуск приложения в трее
     set_windows_app_id()
     app = QApplication(sys.argv)
     app.setApplicationName("CheckRename")
     app.setApplicationDisplayName("CheckRename")
     app.setOrganizationName("CheckRename")
     app.setQuitOnLastWindowClosed(False)
+
+    # 1. Запуск обработки одиночного файла (ПКМ контекстное меню)
+    if args.file:
+        resolved_file = str(Path(args.file).resolve())
+        # Если постоянный фоновый процесс уже работает, передаем команду ему
+        if SingleInstance.send_message(f"RENAME:{resolved_file}"):
+            sys.exit(0)
+        # Если фонового процесса нет, выполняем обработку файла
+        handle_single_file_cli(app, args.file)
+        return
+
+    # 2. Стандартный запуск приложения
+    tray_manager: Optional[TrayManager] = None
+
+    def on_ipc_message(msg: str):
+        nonlocal tray_manager
+        if not tray_manager:
+            return
+        if msg == "SHOW_SETTINGS":
+            tray_manager.show_settings()
+        elif msg.startswith("RENAME:"):
+            target_path = Path(msg[len("RENAME:"):])
+            tray_manager.process_pdf_file(target_path, silent_if_not_invoice=False, force=True)
+
+    single_instance = SingleInstance(on_message_received=on_ipc_message)
+    if not single_instance.is_primary:
+        # Приложение уже запущено в трее!
+        # При повторном клике по экзешнику открываем окно настроек в работающем экземпляре
+        SingleInstance.send_message("SHOW_SETTINGS")
+        sys.exit(0)
 
     config = AppConfig.load()
 

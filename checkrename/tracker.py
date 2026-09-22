@@ -160,10 +160,6 @@ class ProcessedTracker:
             if norm_path in self._known_paths:
                 return True
 
-            # 4. Проверка имени файла
-            if p.name.lower() in self._known_names:
-                return True
-
         return False
 
     def mark_processed(
@@ -232,10 +228,7 @@ class ProcessedTracker:
 
             if ident:
                 self._known_identities.add(ident)
-            self._known_paths.add(norm_orig)
             self._known_paths.add(norm_new)
-            self._known_names.add(original_path.name.lower())
-            self._known_names.add(new_path.name.lower())
 
             self._save()
 
