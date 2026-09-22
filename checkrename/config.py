@@ -53,6 +53,7 @@ class AppConfig:
     tesseract_path: str = field(default_factory=get_default_tesseract_path)
     show_notifications: bool = True
     autostart: bool = True
+    autostart_disabled_by_user: bool = False
     date_format: str = "%d.%m.%Y"
 
     @classmethod
@@ -89,6 +90,9 @@ class AppConfig:
             # Если в сохраненном конфиге остался старый шаблон по умолчанию, обновляем до нового
             if filtered.get("pattern") in ("счет {number}", "счет {number}", ""):
                 filtered["pattern"] = "Счет №{number} ({org} - {date})"
+            # Если автозапуск не был явно отключен пользователем в настройках, включаем по умолчанию
+            if not filtered.get("autostart_disabled_by_user", False):
+                filtered["autostart"] = True
             return cls(**filtered)
         except Exception:
             return cls()

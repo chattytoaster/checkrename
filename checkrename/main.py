@@ -168,8 +168,9 @@ def main():
     if not is_context_menu_registered():
         register_context_menu()
 
-    # Автоматически регистрируем автозапуск при первом запуске, если включен в конфигурации
-    if config.autostart and not is_autostart_registered():
+    # Автоматически регистрируем автозапуск при старте, если не отключен пользователем
+    if not config.autostart_disabled_by_user:
+        config.autostart = True
         set_autostart(True)
 
     tray_manager = TrayManager(config)

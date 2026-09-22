@@ -204,7 +204,9 @@ class SettingsDialog(QDialog):
 
         self.txt_pattern.setText(self.config.pattern)
 
-        self.chk_autostart.setChecked(is_autostart_registered())
+        # Автозапуск включен по умолчанию, если не был явно отключен пользователем
+        autostart_enabled = is_autostart_registered() or (self.config.autostart and not self.config.autostart_disabled_by_user)
+        self.chk_autostart.setChecked(autostart_enabled)
         self.chk_notifications.setChecked(self.config.show_notifications)
         self.chk_win11_classic.setChecked(is_win11_classic_menu_enabled())
 
@@ -296,6 +298,7 @@ class SettingsDialog(QDialog):
         # Настройка автозапуска в реестре
         autostart_checked = self.chk_autostart.isChecked()
         self.config.autostart = autostart_checked
+        self.config.autostart_disabled_by_user = not autostart_checked
         set_autostart(autostart_checked)
 
         self.config.save()

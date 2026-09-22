@@ -21,14 +21,20 @@ def get_launch_command(file_arg_placeholder: bool = True) -> str:
     if getattr(sys, "frozen", False):
         exe_path = sys.executable
         return f'"{exe_path}"{arg_suffix}'
-    else:
-        python_exe = sys.executable
-        pythonw_exe = Path(python_exe).parent / "pythonw.exe"
-        if not pythonw_exe.exists():
-            pythonw_exe = Path(python_exe)
 
-        main_py = Path(__file__).parent / "main.py"
-        return f'"{pythonw_exe}" "{main_py.resolve()}"{arg_suffix}'
+    # Если доступен скомпилированный бинарник CheckRename.exe
+    pkg_dir = Path(__file__).resolve().parent.parent
+    dist_exe = pkg_dir / "dist" / "CheckRename.exe"
+    if dist_exe.is_file():
+        return f'"{dist_exe.resolve()}"{arg_suffix}'
+
+    python_exe = sys.executable
+    pythonw_exe = Path(python_exe).parent / "pythonw.exe"
+    if not pythonw_exe.exists():
+        pythonw_exe = Path(python_exe)
+
+    main_py = Path(__file__).parent / "main.py"
+    return f'"{pythonw_exe}" "{main_py.resolve()}"{arg_suffix}'
 
 
 def get_current_pdf_progid() -> Optional[str]:

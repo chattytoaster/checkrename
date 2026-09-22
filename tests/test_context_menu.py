@@ -39,3 +39,20 @@ def test_win11_classic_menu_toggle():
     finally:
         set_win11_classic_menu(initial)
 
+
+def test_autostart_lifecycle():
+    from checkrename.context_menu import is_autostart_registered, set_autostart, get_launch_command
+    initial = is_autostart_registered()
+    try:
+        assert set_autostart(True) is True
+        assert is_autostart_registered() is True
+
+        cmd = get_launch_command(file_arg_placeholder=False)
+        assert "CheckRename" in cmd or "python" in cmd
+
+        assert set_autostart(False) is True
+        assert is_autostart_registered() is False
+    finally:
+        if initial:
+            set_autostart(True)
+
