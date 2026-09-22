@@ -172,6 +172,7 @@ def main():
     if not config.autostart_disabled_by_user:
         config.autostart = True
         set_autostart(True)
+        config.save()
 
     tray_manager = TrayManager(config)
 
