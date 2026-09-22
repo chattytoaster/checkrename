@@ -2,6 +2,12 @@ import sys
 import os
 import argparse
 from pathlib import Path
+
+# Обеспечиваем корректный импорт пакета при любом способе запуска файла
+_pkg_root = Path(__file__).resolve().parent.parent
+if str(_pkg_root) not in sys.path:
+    sys.path.insert(0, str(_pkg_root))
+
 from PyQt6.QtWidgets import QApplication, QSystemTrayIcon
 from PyQt6.QtCore import QTimer, Qt
 
@@ -10,7 +16,9 @@ from docrename.parser import parse_invoice_pdf
 from docrename.renamer import Renamer
 from docrename.ui.tray import TrayManager
 from docrename.ui.resources import create_app_icon
-from docrename.context_menu import register_context_menu, unregister_context_menu
+from docrename.context_menu import (
+    register_context_menu, unregister_context_menu, is_context_menu_registered
+)
 
 def handle_single_file_cli(file_path_str: str):
     """
