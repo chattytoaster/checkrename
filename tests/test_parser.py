@@ -6,8 +6,18 @@ from docrename.parser import (
     normalize_date,
     sanitize_filename_part,
     extract_supplier_org,
+    normalize_org_name,
     parse_invoice_pdf
 )
+
+def test_normalize_org_name():
+    assert normalize_org_name("Общество с ограниченной ответственностью «Ромашка»") == "ООО Ромашка"
+    assert normalize_org_name("общество с огр отв Вектор") == "ООО Вектор"
+    assert normalize_org_name("Общество с огр. отв. Лидер") == "ООО Лидер"
+    assert normalize_org_name("Индивидуальный предприниматель Иванов И.И.") == "ИП Иванов И.И."
+    assert normalize_org_name("Публичное акционерное общество Сбербанк") == "ПАО Сбербанк"
+    assert normalize_org_name("Акционерное общество «Тинькофф Банк»") == "АО Тинькофф Банк"
+
 
 def test_normalize_date():
     assert normalize_date("15 мая 2024 г.") == "15.05.2024"
