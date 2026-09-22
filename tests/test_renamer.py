@@ -1,8 +1,8 @@
 import pytest
 from pathlib import Path
-from docrename.config import AppConfig
-from docrename.renamer import Renamer
-from docrename.parser import InvoiceInfo
+from checkrename.config import AppConfig
+from checkrename.renamer import Renamer
+from checkrename.parser import InvoiceInfo
 
 def test_format_new_name_default(tmp_path: Path):
     config = AppConfig()

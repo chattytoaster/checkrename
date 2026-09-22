@@ -1,5 +1,5 @@
 import pytest
-from docrename.context_menu import (
+from checkrename.context_menu import (
     register_context_menu,
     unregister_context_menu,
     is_context_menu_registered,

@@ -6,12 +6,12 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from docrename.config import AppConfig
-from docrename.parser import parse_invoice_pdf, InvoiceInfo
-from docrename.renamer import Renamer
-from docrename.watcher import DownloadsWatcher
-from docrename.ui.resources import create_app_icon
-from docrename.ui.settings_dialog import SettingsDialog
+from checkrename.config import AppConfig
+from checkrename.parser import parse_invoice_pdf, InvoiceInfo
+from checkrename.renamer import Renamer
+from checkrename.watcher import DownloadsWatcher
+from checkrename.ui.resources import create_app_icon
+from checkrename.ui.settings_dialog import SettingsDialog
 
 class TrayManager(QObject):
     file_renamed = pyqtSignal(str, str) # old_name, new_name
@@ -40,7 +40,7 @@ class TrayManager(QObject):
         self.menu = QMenu()
 
         # Заголовок меню
-        self.act_title = QAction("DocRename — Мониторинг счетов", self.menu)
+        self.act_title = QAction("CheckRename — Мониторинг счетов", self.menu)
         self.act_title.setEnabled(False)
         self.menu.addAction(self.act_title)
         self.menu.addSeparator()
@@ -72,7 +72,7 @@ class TrayManager(QObject):
         self.menu.addAction(self.act_quit)
 
         self.tray_icon.setContextMenu(self.menu)
-        self.tray_icon.setToolTip("DocRename — Автопереименование PDF-счетов")
+        self.tray_icon.setToolTip("CheckRename — Автопереименование PDF-счетов")
         self.tray_icon.activated.connect(self._on_tray_activated)
         self.tray_icon.show()
 

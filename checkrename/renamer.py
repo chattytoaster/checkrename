@@ -4,8 +4,8 @@ import re
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional, List, Tuple
-from docrename.parser import InvoiceInfo, sanitize_filename_part
-from docrename.config import AppConfig
+from checkrename.parser import InvoiceInfo, sanitize_filename_part
+from checkrename.config import AppConfig
 
 @dataclass
 class RenameRecord:

@@ -4,11 +4,11 @@ import winreg
 from pathlib import Path
 from typing import List, Optional
 
-REG_SYS_KEY = r"Software\Classes\SystemFileAssociations\.pdf\shell\DocRename"
-REG_ALL_KEY = r"Software\Classes\*\shell\DocRename"
+REG_SYS_KEY = r"Software\Classes\SystemFileAssociations\.pdf\shell\CheckRename"
+REG_ALL_KEY = r"Software\Classes\*\shell\CheckRename"
 REG_RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 REG_WIN11_CLASSIC_KEY = r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
-APP_NAME = "DocRename"
+APP_NAME = "CheckRename"
 
 def get_launch_command(file_arg_placeholder: bool = True) -> str:
     """
@@ -47,11 +47,11 @@ def get_target_shell_keys() -> List[str]:
     keys = [
         REG_SYS_KEY,
         REG_ALL_KEY,
-        r"Software\Classes\.pdf\shell\DocRename",
+        r"Software\Classes\.pdf\shell\CheckRename",
     ]
     prog_id = get_current_pdf_progid()
     if prog_id:
-        keys.append(f"Software\\Classes\\{prog_id}\\shell\\DocRename")
+        keys.append(f"Software\\Classes\\{prog_id}\\shell\\CheckRename")
     return keys
 
 
@@ -67,10 +67,10 @@ def is_context_menu_registered() -> bool:
 
 
 def register_context_menu(menu_title: str = "Найти номер счета") -> bool:
-    """
+    r"""
     Регистрирует пункт в контекстном меню во всех ключевых ветках реестра HKCU:
     - SystemFileAssociations\.pdf
-    - *\shell\DocRename с фильтром AppliesTo = System.FileExtension:=.pdf
+    - *\shell\CheckRename с фильтром AppliesTo = System.FileExtension:=.pdf
     - ProgId пользователя (Firefox, Chrome, Acrobat и т.д.)
     """
     success = False

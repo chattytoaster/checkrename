@@ -1,7 +1,7 @@
 import time
 from pathlib import Path
 import pymupdf as fitz
-from docrename.watcher import DownloadsWatcher
+from checkrename.watcher import DownloadsWatcher
 
 def test_watcher_detects_pdf(tmp_path: Path):
     detected_files = []

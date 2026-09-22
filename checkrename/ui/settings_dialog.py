@@ -7,13 +7,13 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 
-from docrename.config import AppConfig
-from docrename.context_menu import (
+from checkrename.config import AppConfig
+from checkrename.context_menu import (
     is_context_menu_registered, register_context_menu, unregister_context_menu,
     is_autostart_registered, set_autostart,
     is_win11_classic_menu_enabled, set_win11_classic_menu
 )
-from docrename.ui.resources import create_app_icon
+from checkrename.ui.resources import create_app_icon
 
 class SettingsDialog(QDialog):
     settings_saved = pyqtSignal(AppConfig)
@@ -21,7 +21,7 @@ class SettingsDialog(QDialog):
     def __init__(self, config: AppConfig, parent=None):
         super().__init__(parent)
         self.config = config
-        self.setWindowTitle("Настройки DocRename")
+        self.setWindowTitle("Настройки CheckRename")
         self.setWindowIcon(create_app_icon(active=True))
         self.resize(540, 520)
 
@@ -129,7 +129,7 @@ class SettingsDialog(QDialog):
         h_ctx_btns.addStretch()
         l_ctx.addLayout(h_ctx_btns)
 
-        self.chk_autostart = QCheckBox("Запускать DocRename при старте Windows")
+        self.chk_autostart = QCheckBox("Запускать CheckRename при старте Windows")
         l_ctx.addWidget(self.chk_autostart)
 
         self.chk_notifications = QCheckBox("Показывать всплывающие уведомления при переименовании")

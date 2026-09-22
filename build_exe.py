@@ -4,14 +4,14 @@ from pathlib import Path
 from PyQt6.QtWidgets import QApplication
 
 def build():
-    print("=== Начало сборки DocRename в автономный .exe ===")
+    print("=== Начало сборки CheckRename в автономный .exe ===")
     project_dir = Path(__file__).parent.resolve()
     
     # 1. Генерация иконки .ico
     icon_path = project_dir / "app_icon.ico"
     try:
         app = QApplication(sys.argv)
-        from docrename.ui.resources import export_ico_file
+        from checkrename.ui.resources import export_ico_file
         export_ico_file(icon_path)
         print(f"[OK] Сгенерирована иконка: {icon_path}")
     except Exception as e:
@@ -19,12 +19,12 @@ def build():
         icon_path = None
 
     # 2. Формирование команды PyInstaller
-    main_script = project_dir / "docrename" / "main.py"
+    main_script = project_dir / "checkrename" / "main.py"
     
     cmd = [
         sys.executable,
         "-m", "PyInstaller",
-        "--name=DocRename",
+        "--name=CheckRename",
         "--onefile",
         "--noconsole",
         "--clean",
@@ -47,7 +47,7 @@ def build():
     print("Запуск PyInstaller...")
     res = subprocess.run(cmd, cwd=str(project_dir))
     if res.returncode == 0:
-        exe_path = project_dir / "dist" / "DocRename.exe"
+        exe_path = project_dir / "dist" / "CheckRename.exe"
         print("\n" + "="*50)
         print(f"[УСПЕХ] Сборка завершена успешно!")
         print(f"Исполняемый файл находится по пути:\n{exe_path}")

@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 import pymupdf as fitz  # PyMuPDF
-from docrename.parser import (
+from checkrename.parser import (
     extract_invoice_data_from_text,
     normalize_date,
     sanitize_filename_part,

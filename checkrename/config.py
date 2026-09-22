@@ -59,9 +59,19 @@ class AppConfig:
     def get_config_path(cls) -> Path:
         """Путь к файлу конфигурации в AppData пользователя."""
         app_data = Path(os.environ.get("APPDATA", str(Path.home())))
-        config_dir = app_data / "DocRename"
+        config_dir = app_data / "CheckRename"
         config_dir.mkdir(parents=True, exist_ok=True)
-        return config_dir / "config.json"
+
+        new_path = config_dir / "config.json"
+        # Миграция старого конфига, если существует
+        old_path = app_data / "DocRename" / "config.json"
+        if not new_path.exists() and old_path.exists():
+            try:
+                import shutil
+                shutil.copy2(str(old_path), str(new_path))
+            except Exception:
+                pass
+        return new_path
 
     @classmethod
     def load(cls) -> "AppConfig":

@@ -11,20 +11,33 @@ if str(_pkg_root) not in sys.path:
 from PyQt6.QtWidgets import QApplication, QSystemTrayIcon
 from PyQt6.QtCore import QTimer, Qt
 
-from docrename.config import AppConfig
-from docrename.parser import parse_invoice_pdf
-from docrename.renamer import Renamer
-from docrename.ui.tray import TrayManager
-from docrename.ui.resources import create_app_icon
-from docrename.context_menu import (
+from checkrename.config import AppConfig
+from checkrename.parser import parse_invoice_pdf
+from checkrename.renamer import Renamer
+from checkrename.ui.tray import TrayManager
+from checkrename.ui.resources import create_app_icon
+from checkrename.context_menu import (
     register_context_menu, unregister_context_menu, is_context_menu_registered
 )
+
+def set_windows_app_id():
+    """Устанавливает явный AppUserModelID для Windows, чтобы уведомления приходили от CheckRename, а не от python."""
+    try:
+        import ctypes
+        myappid = "CheckRename.PDFRenamer.1.0"
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    except Exception:
+        pass
 
 def handle_single_file_cli(file_path_str: str):
     """
     Обработка файла при вызове из контекстного меню Проводника (ПКМ «Найти номер счета»).
     """
+    set_windows_app_id()
     app = QApplication(sys.argv)
+    app.setApplicationName("CheckRename")
+    app.setApplicationDisplayName("CheckRename")
+    app.setOrganizationName("CheckRename")
     app.setQuitOnLastWindowClosed(False)
 
     config = AppConfig.load()
@@ -86,7 +99,7 @@ def handle_single_file_cli(file_path_str: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="DocRename - автоматическое переименование PDF-счетов.")
+    parser = argparse.ArgumentParser(description="CheckRename - автоматическое переименование PDF-счетов.")
     parser.add_argument("--file", "-f", type=str, help="Путь к PDF файлу для переименования (из контекстного меню)")
     parser.add_argument("--install-menu", action="store_true", help="Зарегистрировать пункт контекстного меню")
     parser.add_argument("--uninstall-menu", action="store_true", help="Удалить пункт контекстного меню")
@@ -114,9 +127,11 @@ def main():
         return
 
     # Стандартный запуск приложения в трее
+    set_windows_app_id()
     app = QApplication(sys.argv)
-    app.setApplicationName("DocRename")
-    app.setOrganizationName("DocRename")
+    app.setApplicationName("CheckRename")
+    app.setApplicationDisplayName("CheckRename")
+    app.setOrganizationName("CheckRename")
     app.setQuitOnLastWindowClosed(False)
 
     config = AppConfig.load()
