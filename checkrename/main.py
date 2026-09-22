@@ -72,21 +72,29 @@ def handle_single_file_cli(file_path_str: str):
             4500
         )
     else:
-        new_path = renamer.process_file(path, info)
+        new_path = renamer.process_file(path, info, force=True)
         if new_path:
-            details = []
-            if info.date:
-                details.append(f"Дата: {info.date}")
-            if info.org:
-                details.append(f"Организация: {info.org}")
-            det_str = f"\n({', '.join(details)})" if details else ""
+            if new_path.resolve() == path.resolve():
+                tray.showMessage(
+                    "Счет проверен",
+                    f"Файл уже имеет требуемое имя:\n{new_path.name}\n№ счета: {info.number}",
+                    QSystemTrayIcon.MessageIcon.Information,
+                    4500
+                )
+            else:
+                details = []
+                if info.date:
+                    details.append(f"Дата: {info.date}")
+                if info.org:
+                    details.append(f"Организация: {info.org}")
+                det_str = f"\n({', '.join(details)})" if details else ""
 
-            tray.showMessage(
-                "Счет успешно переименован",
-                f"Новое имя: {new_path.name}\n№ счета: {info.number}{det_str}",
-                QSystemTrayIcon.MessageIcon.Information,
-                5000
-            )
+                tray.showMessage(
+                    "Счет успешно переименован",
+                    f"Новое имя: {new_path.name}\n№ счета: {info.number}{det_str}",
+                    QSystemTrayIcon.MessageIcon.Information,
+                    5000
+                )
         else:
             tray.showMessage(
                 "Ошибка переименования",

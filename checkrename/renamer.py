@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple
 from checkrename.parser import InvoiceInfo, sanitize_filename_part
 from checkrename.config import AppConfig
+from checkrename.tracker import ProcessedTracker, default_tracker
 
 @dataclass
 class RenameRecord:
@@ -14,8 +15,9 @@ class RenameRecord:
     timestamp: float
 
 class Renamer:
-    def __init__(self, config: AppConfig):
+    def __init__(self, config: AppConfig, tracker: Optional[ProcessedTracker] = None):
         self.config = config
+        self.tracker = tracker or default_tracker
         self.history: List[RenameRecord] = []
 
     def format_new_name(self, original_path: Path, info: InvoiceInfo) -> str:
@@ -72,10 +74,11 @@ class Renamer:
 
         return candidate_path
 
-    def process_file(self, file_path: Path | str, info: InvoiceInfo) -> Optional[Path]:
+    def process_file(self, file_path: Path | str, info: InvoiceInfo, force: bool = False) -> Optional[Path]:
         """
         Выполняет переименование (и возможно перемещение) файла.
         Возвращает новый путь к файлу или None при ошибке/отсутствии номера.
+        Если force=False, проверяет, не был ли файл уже переименован ранее.
         """
         original_path = Path(file_path).resolve()
         if not original_path.is_file():
@@ -84,11 +87,36 @@ class Renamer:
         if not info.number:
             return None
 
+        # Проверяем, не был ли этот файл уже однажды обработан и переименован
+        if not force and self.tracker.is_processed(original_path):
+            return original_path
+
+        # Проверяем, если имя файла уже содержит "Счет" и номер счета (пользователь мог добавить статус/пометку)
+        if not force and info.number:
+            stem = original_path.stem
+            pattern = rf"(?:Счет|Счёт|Заказ-счет)\s*(?:№|N|#)?\s*{re.escape(info.number)}"
+            if re.search(pattern, stem, re.IGNORECASE):
+                self.tracker.mark_processed(
+                    original_path=original_path,
+                    new_path=original_path,
+                    invoice_number=info.number,
+                    invoice_date=info.date,
+                    invoice_org=info.org
+                )
+                return original_path
+
         base_name = self.format_new_name(original_path, info)
         target_path = self.resolve_destination_path(original_path, base_name)
 
         if target_path.resolve() == original_path.resolve():
             # Имя файла уже соответствует целевому
+            self.tracker.mark_processed(
+                original_path=original_path,
+                new_path=original_path,
+                invoice_number=info.number,
+                invoice_date=info.date,
+                invoice_org=info.org
+            )
             return original_path
 
         import time
@@ -102,6 +130,13 @@ class Renamer:
                     new_path=target_path,
                     timestamp=time.time()
                 ))
+                self.tracker.mark_processed(
+                    original_path=original_path,
+                    new_path=target_path,
+                    invoice_number=info.number,
+                    invoice_date=info.date,
+                    invoice_org=info.org
+                )
                 return target_path
             except PermissionError:
                 time.sleep(0.5)
@@ -137,7 +172,9 @@ class Renamer:
 
         try:
             shutil.move(str(current_path), str(target_restore))
+            self.tracker.unmark_processed(current_path)
+            self.tracker.unmark_processed(target_restore)
             return (current_path, target_restore)
         except Exception as e:
-            print(f"Ошибка отмены переименования: {e}")
+            print(f"Ошибка при отмене переименования: {e}")
             return None

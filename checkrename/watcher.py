@@ -5,13 +5,15 @@ from pathlib import Path
 from typing import Callable, Optional, Set
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileCreatedEvent, FileMovedEvent
+from checkrename.tracker import ProcessedTracker, default_tracker
 
 IGNORED_EXTENSIONS = {'.crdownload', '.tmp', '.part', '.download', '.swp'}
 
 class DownloadsHandler(FileSystemEventHandler):
-    def __init__(self, callback: Callable[[Path], None]):
+    def __init__(self, callback: Callable[[Path], None], tracker: Optional[ProcessedTracker] = None):
         super().__init__()
         self.callback = callback
+        self.tracker = tracker or default_tracker
         self._processed_files: Set[str] = set()
         self._lock = threading.Lock()
 
@@ -65,6 +67,11 @@ class DownloadsHandler(FileSystemEventHandler):
             return
 
         file_path = Path(path_str).resolve()
+
+        # Если файл уже был обработан CheckRename, не трогаем его
+        if self.tracker.is_processed(file_path):
+            return
+
         norm_path = str(file_path)
 
         with self._lock:
@@ -76,7 +83,9 @@ class DownloadsHandler(FileSystemEventHandler):
         def worker():
             try:
                 if self._wait_until_ready(file_path):
-                    self.callback(file_path)
+                    # Повторная проверка после ожидания доступности
+                    if not self.tracker.is_processed(file_path):
+                        self.callback(file_path)
             finally:
                 # Через 10 секунд удаляем из множества недавних
                 time.sleep(10)
@@ -91,15 +100,33 @@ class DownloadsHandler(FileSystemEventHandler):
             self._handle_path(event.src_path)
 
     def on_moved(self, event: FileMovedEvent):
-        if not event.is_directory:
-            # Когда .crdownload переименовывается в .pdf, это событие on_moved
+        if event.is_directory:
+            return
+
+        src = Path(event.src_path)
+        dest = Path(event.dest_path)
+
+        # Если существующий PDF переименовывается в другой PDF (пользователь добавил текст или CheckRename переместил)
+        if src.suffix.lower() == '.pdf' and dest.suffix.lower() == '.pdf':
+            # Обновляем трекер, но НЕ запускаем повторное автоматическое переименование
+            self.tracker.update_path(src, dest)
+            return
+
+        # Завершение скачивания из браузера (.crdownload -> .pdf, .part -> .pdf, .tmp -> .pdf и т.п.)
+        if dest.suffix.lower() == '.pdf':
             self._handle_path(event.dest_path)
 
 
 class DownloadsWatcher:
-    def __init__(self, watch_folder: str, callback: Callable[[Path], None]):
+    def __init__(
+        self,
+        watch_folder: str,
+        callback: Callable[[Path], None],
+        tracker: Optional[ProcessedTracker] = None
+    ):
         self.watch_folder = watch_folder
         self.callback = callback
+        self.tracker = tracker or default_tracker
         self.observer: Optional[Observer] = None
         self._is_running = False
 
@@ -115,7 +142,7 @@ class DownloadsWatcher:
                 print(f"Не удалось создать папку для мониторинга {watch_path}: {e}")
                 return
 
-        handler = DownloadsHandler(self.callback)
+        handler = DownloadsHandler(self.callback, tracker=self.tracker)
         self.observer = Observer()
         self.observer.schedule(handler, str(watch_path), recursive=False)
         self.observer.daemon = True

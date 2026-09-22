@@ -25,7 +25,8 @@ class TrayManager(QObject):
         # Инициализация слушателя
         self.watcher = DownloadsWatcher(
             watch_folder=self.config.watch_folder,
-            callback=self.handle_incoming_file
+            callback=self.handle_incoming_file,
+            tracker=self.renamer.tracker
         )
 
         self._init_tray()
@@ -118,11 +119,14 @@ class TrayManager(QObject):
         icon = QSystemTrayIcon.MessageIcon.Warning if is_error else QSystemTrayIcon.MessageIcon.Information
         self.tray_icon.showMessage(title, message, icon, 4000)
 
-    def process_pdf_file(self, file_path: Path, silent_if_not_invoice: bool = True) -> bool:
+    def process_pdf_file(self, file_path: Path, silent_if_not_invoice: bool = True, force: bool = False) -> bool:
         """
         Обрабатывает PDF файл: парсит, извлекает данные и переименовывает.
         """
         if not file_path.is_file() or file_path.suffix.lower() != ".pdf":
+            return False
+
+        if not force and self.renamer.tracker.is_processed(file_path):
             return False
 
         orig_name = file_path.name
@@ -141,8 +145,16 @@ class TrayManager(QObject):
                 )
             return False
 
-        new_path = self.renamer.process_file(file_path, info)
+        new_path = self.renamer.process_file(file_path, info, force=force)
         if new_path:
+            if new_path.resolve() == file_path.resolve():
+                if not force:
+                    # Файл уже имел требуемое имя или пользовательское дополнение
+                    return False
+                else:
+                    self.notify("Счет распознан", f"Файл уже имеет требуемое имя:\n{new_path.name}")
+                    return True
+
             extra = []
             if info.date:
                 extra.append(f"Дата: {info.date}")
