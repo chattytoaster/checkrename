@@ -22,7 +22,7 @@ class Renamer:
         """
         Форматирует базовое имя файла на основе шаблона и извлеченных данных.
         """
-        pattern = self.config.pattern or "счет {number}"
+        pattern = self.config.pattern or "Счет №{number} ({org} - {date})"
         orig_stem = original_path.stem
 
         number_val = info.number or "БН"
@@ -36,14 +36,17 @@ class Renamer:
         result = result.replace("{org}", org_val)
         result = result.replace("{original}", orig_stem)
 
-        # Очищаем пустые скобки и лишние разделители, если поле (например {org} или {date}) было пустым
-        result = re.sub(r'\(\s*\)', '', result)
+        # Очищаем дефисы и пустые скобки, если {org} или {date} отсутствуют
+        result = re.sub(r'\(\s*-\s*\)', '', result)  # ( - ) -> пусто
+        result = re.sub(r'\(\s*-\s*', '(', result)   # ( - дата) -> (дата)
+        result = re.sub(r'\s*-\s*\)', ')', result)   # (орг - ) -> (орг)
+        result = re.sub(r'\(\s*\)', '', result)      # () -> пусто
         result = re.sub(r'\[\s*\]', '', result)
         result = re.sub(r'-\s*-', '-', result)
         result = sanitize_filename_part(result)
 
         if not result:
-            result = f"счет {number_val}"
+            result = f"Счет №{number_val}"
 
         return result
 

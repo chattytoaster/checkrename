@@ -5,14 +5,32 @@ from docrename.renamer import Renamer
 from docrename.parser import InvoiceInfo
 
 def test_format_new_name_default(tmp_path: Path):
-    config = AppConfig(pattern="счет {number}")
+    config = AppConfig()
     renamer = Renamer(config)
 
     file_path = tmp_path / "original_download.pdf"
     info = InvoiceInfo(number="123", date="01.05.2024", org="ООО Тест")
 
     name = renamer.format_new_name(file_path, info)
-    assert name == "счет 123"
+    assert name == "Счет №123 (ООО Тест - 01.05.2024)"
+
+
+def test_format_new_name_partial_fields(tmp_path: Path):
+    config = AppConfig()
+    renamer = Renamer(config)
+    file_path = tmp_path / "doc.pdf"
+
+    # Только номер и дата
+    info_no_org = InvoiceInfo(number="45", date="12.08.2024")
+    assert renamer.format_new_name(file_path, info_no_org) == "Счет №45 (12.08.2024)"
+
+    # Только номер и организация
+    info_no_date = InvoiceInfo(number="45", org="ООО Вектор")
+    assert renamer.format_new_name(file_path, info_no_date) == "Счет №45 (ООО Вектор)"
+
+    # Только номер
+    info_only_num = InvoiceInfo(number="45")
+    assert renamer.format_new_name(file_path, info_only_num) == "Счет №45"
 
 
 def test_format_new_name_custom_template(tmp_path: Path):

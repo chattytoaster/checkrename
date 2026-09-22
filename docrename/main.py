@@ -112,6 +112,11 @@ def main():
     app.setQuitOnLastWindowClosed(False)
 
     config = AppConfig.load()
+
+    # Автоматически регистрируем пункт контекстного меню при первом запуске
+    if not is_context_menu_registered():
+        register_context_menu()
+
     tray_manager = TrayManager(config)
 
     if args.settings:

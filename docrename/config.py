@@ -46,7 +46,7 @@ def get_default_tesseract_path() -> str:
 class AppConfig:
     watch_enabled: bool = True
     watch_folder: str = field(default_factory=get_default_downloads_dir)
-    pattern: str = "счет {number}"
+    pattern: str = "Счет №{number} ({org} - {date})"
     move_enabled: bool = False
     destination_folder: str = ""
     ocr_enabled: bool = True
@@ -76,6 +76,9 @@ class AppConfig:
             # Фильтруем неизвестные поля для совместимости версий
             valid_fields = {f for f in cls.__dataclass_fields__}
             filtered = {k: v for k, v in data.items() if k in valid_fields}
+            # Если в сохраненном конфиге остался старый шаблон по умолчанию, обновляем до нового
+            if filtered.get("pattern") in ("счет {number}", "счет {number}", ""):
+                filtered["pattern"] = "Счет №{number} ({org} - {date})"
             return cls(**filtered)
         except Exception:
             return cls()

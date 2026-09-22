@@ -245,7 +245,7 @@ class SettingsDialog(QDialog):
         self.txt_pattern.setFocus()
 
     def _update_preview(self):
-        pattern = self.txt_pattern.text().strip() or "счет {number}"
+        pattern = self.txt_pattern.text().strip() or "Счет №{number} ({org} - {date})"
         sample = pattern.replace("{number}", "124")
         sample = sample.replace("{date}", "15.05.2024")
         sample = sample.replace("{org}", "ООО Ромашка")
@@ -257,7 +257,7 @@ class SettingsDialog(QDialog):
         self.config.watch_folder = self.txt_watch_folder.text().strip()
         self.config.move_enabled = self.chk_move_enabled.isChecked()
         self.config.destination_folder = self.txt_dest_folder.text().strip()
-        self.config.pattern = self.txt_pattern.text().strip() or "счет {number}"
+        self.config.pattern = self.txt_pattern.text().strip() or "Счет №{number} ({org} - {date})"
         self.config.show_notifications = self.chk_notifications.isChecked()
         self.config.ocr_enabled = self.chk_ocr_enabled.isChecked()
         self.config.tesseract_path = self.txt_tesseract_path.text().strip()
