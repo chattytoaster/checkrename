@@ -55,6 +55,19 @@ def test_extract_invoice_data_short():
     assert info.date == "10.02.2024"
 
 
+def test_extract_invoice_oferta():
+    text = """
+    Счет-оферта на оплату № 3892 от 21 сентября 2026 г.
+    Поставщик: ООО "Центр Строительного Крепежа", ИНН 2537105107, КПП 250201001, 692491, Приморский край...
+    Покупатель: ООО "Северстрой ДВ", ИНН 2540206592...
+    """
+    info = extract_invoice_data_from_text(text)
+    assert info.number == "3892"
+    assert info.date == "21.09.2026"
+    assert info.org == "ООО Центр Строительного Крепежа"
+
+
+
 def test_extract_invoice_english():
     text = "Commercial Invoice No. INV-9982 from 12.11.2024"
     info = extract_invoice_data_from_text(text)
