@@ -52,7 +52,7 @@ class AppConfig:
     ocr_enabled: bool = True
     tesseract_path: str = field(default_factory=get_default_tesseract_path)
     show_notifications: bool = True
-    autostart: bool = False
+    autostart: bool = True
     date_format: str = "%d.%m.%Y"
 
     @classmethod

@@ -17,7 +17,8 @@ from checkrename.renamer import Renamer
 from checkrename.ui.tray import TrayManager
 from checkrename.ui.resources import create_app_icon
 from checkrename.context_menu import (
-    register_context_menu, unregister_context_menu, is_context_menu_registered
+    register_context_menu, unregister_context_menu, is_context_menu_registered,
+    set_autostart, is_autostart_registered
 )
 
 def set_windows_app_id():
@@ -139,6 +140,10 @@ def main():
     # Автоматически регистрируем пункт контекстного меню при первом запуске
     if not is_context_menu_registered():
         register_context_menu()
+
+    # Автоматически регистрируем автозапуск при первом запуске, если включен в конфигурации
+    if config.autostart and not is_autostart_registered():
+        set_autostart(True)
 
     tray_manager = TrayManager(config)
 
