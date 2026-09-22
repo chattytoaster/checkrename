@@ -10,7 +10,8 @@ from PyQt6.QtGui import QFont
 from docrename.config import AppConfig
 from docrename.context_menu import (
     is_context_menu_registered, register_context_menu, unregister_context_menu,
-    is_autostart_registered, set_autostart
+    is_autostart_registered, set_autostart,
+    is_win11_classic_menu_enabled, set_win11_classic_menu
 )
 from docrename.ui.resources import create_app_icon
 
@@ -134,6 +135,10 @@ class SettingsDialog(QDialog):
         self.chk_notifications = QCheckBox("Показывать всплывающие уведомления при переименовании")
         l_ctx.addWidget(self.chk_notifications)
 
+        self.chk_win11_classic = QCheckBox("Классическое меню Windows 11 (открывать все пункты сразу без «Дополнительные параметры»)")
+        self.chk_win11_classic.toggled.connect(self._toggle_win11_classic)
+        l_ctx.addWidget(self.chk_win11_classic)
+
         layout_int.addWidget(grp_ctx)
 
         # Распознавание OCR
@@ -187,11 +192,16 @@ class SettingsDialog(QDialog):
 
         self.chk_autostart.setChecked(is_autostart_registered())
         self.chk_notifications.setChecked(self.config.show_notifications)
+        self.chk_win11_classic.setChecked(is_win11_classic_menu_enabled())
 
         self.chk_ocr_enabled.setChecked(self.config.ocr_enabled)
         self.txt_tesseract_path.setText(self.config.tesseract_path)
 
         self._refresh_ctx_button()
+
+    def _toggle_win11_classic(self, checked: bool):
+        set_win11_classic_menu(checked)
+
 
     def _refresh_ctx_button(self):
         if is_context_menu_registered():

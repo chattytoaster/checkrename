@@ -2,7 +2,9 @@ import pytest
 from docrename.context_menu import (
     register_context_menu,
     unregister_context_menu,
-    is_context_menu_registered
+    is_context_menu_registered,
+    is_win11_classic_menu_enabled,
+    set_win11_classic_menu
 )
 
 def test_context_menu_lifecycle():
@@ -24,3 +26,16 @@ def test_context_menu_lifecycle():
             register_context_menu()
         else:
             unregister_context_menu()
+
+
+def test_win11_classic_menu_toggle():
+    initial = is_win11_classic_menu_enabled()
+    try:
+        set_win11_classic_menu(True)
+        assert is_win11_classic_menu_enabled() is True
+
+        set_win11_classic_menu(False)
+        assert is_win11_classic_menu_enabled() is False
+    finally:
+        set_win11_classic_menu(initial)
+
